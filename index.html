@@ -2,130 +2,162 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Abre aquí Jean ❤️</title>
+  <title>Para Jean 💕</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #000; /* Fondo oscuro */
-      color: white; /* Texto blanco */
+      background: black;
+      color: white;
       font-family: Arial, sans-serif;
+      text-align: center;
     }
 
-    .btn {
+    .start-screen {
       position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 20px;
-      background: #ee5282;
-      color: white;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .start-btn {
+      font-size: 2em;
+      color: #ff4d6d;
+      background: none;
       border: none;
-      border-radius: 8px;
       cursor: pointer;
-      font-size: 18px;
-      z-index: 2;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
 
     .message {
       position: absolute;
-      top: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      font-size: 20px;
-      line-height: 1.5;
-      display: none;
-      z-index: 2;
+      bottom: 50px;
+      width: 100%;
+      font-size: 1.5em;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
     }
 
     canvas {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1;
+    }
+
+    svg {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <button class="btn" onclick="showMessage()">Abre aquí Jean</button>
+  <!-- Pantalla inicial -->
+  <div class="start-screen" id="startScreen">
+    <button class="start-btn" onclick="startAnimation()">💌 Abre aquí Jean 💌</button>
+  </div>
+
+  <!-- Corazón SVG -->
+  <svg viewBox="0 0 600 552">
+    <path d="M300,107.77C284.68,55.67,239.76,0,162.31,0,64.83,0,0,82.08,0,171.71c0,.48,0,.95,0,1.43-.52,19.5,0,217.94,299.87,379.69v0l0,0,.05,0,0,0,0,0v0C600,391.08,600.48,192.64,600,173.14c0-.48,0-.95,0-1.43C600,82.08,535.17,0,437.69,0,360.24,0,315.32,55.67,300,107.77" fill="#ee5282"/>
+  </svg>
+
+  <!-- Mensaje -->
   <div class="message" id="message">
-    Tú eres muy inteligente y puedes con todo. 💪<br>
-    No te estreses mucho porque te van a salir canas rápido 😂.<br>
+    Tú eres muy inteligente y puedes con todo.<br>
+    No te estreses mucho porque te van a salir canas rápido.<br>
     Te amo mucho ❤️
   </div>
 
-  <svg viewBox="0 0 600 552" style="display:none;">
-    <path id="heartPath" d="M300,107.77C284.68,55.67,239.76,0,162.31,0,64.83,0,0,82.08,0,171.71c0,.48,0,.95,0,1.43-.52,19.5,0,217.94,299.87,379.69v0l0,0,.05,0,0,0,0,0v0C600,391.08,600.48,192.64,600,173.14c0-.48,0-.95,0-1.43C600,82.08,535.17,0,437.69,0,360.24,0,315.32,55.67,300,107.77" fill="#ee5282"/>
-  </svg>
-
-  <!-- Librerías necesarias -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 
   <script>
-    // Escena y cámara
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 5000
-    );
-    camera.position.z = 500;
+    let scene, camera, renderer, particles, geometry, vertices;
 
-    // Renderizador
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Crear partículas con la forma del corazón
-    const path = document.getElementById("heartPath");
-    const length = path.getTotalLength();
-    const vertices = [];
-    const tl = gsap.timeline({ repeat: -1, yoyo: true });
-
-    for (let i = 0; i < length; i += 0.5) {
-      const point = path.getPointAtLength(i);
-      const vector = new THREE.Vector3(point.x, -point.y, 0);
-      vector.x += (Math.random() - 0.5) * 30;
-      vector.y += (Math.random() - 0.5) * 30;
-      vector.z += (Math.random() - 0.5) * 70;
-      vertices.push(vector);
-
-      tl.from(vector, {
-        x: 600 / 2,
-        y: -552 / 2,
-        z: 0,
-        ease: "power2.inOut",
-        duration: Math.random() * 3 + 2
-      }, i * 0.001);
+    function startAnimation() {
+      document.getElementById("startScreen").style.display = "none";
+      startHeartLoop();
     }
 
-    const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
-    const material = new THREE.PointsMaterial({ color: 0xee5282, size: 3 });
-    const particles = new THREE.Points(geometry, material);
-    particles.position.x -= 600 / 2;
-    particles.position.y += 552 / 2;
-    scene.add(particles);
+    function startHeartLoop() {
+      // limpiar canvas si ya había uno
+      if (document.querySelector("canvas")) {
+        document.querySelector("canvas").remove();
+      }
 
-    // Animación
-    function render() {
-      requestAnimationFrame(render);
-      geometry.setFromPoints(vertices);
-      renderer.render(scene, camera);
+      // ocultar mensaje
+      document.getElementById("message").style.opacity = 0;
+
+      // iniciar corazón
+      initHeart(() => {
+        // mostrar mensaje al terminar
+        gsap.to("#message", { opacity: 1, duration: 1.5 });
+
+        // esperar 4 seg y reiniciar
+        setTimeout(startHeartLoop, 5000);
+      });
     }
-    render();
 
-    // Ajustar tamaño en móvil
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+    function initHeart(callback) {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+      camera.position.z = 600;
+
+      renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+      document.body.appendChild(renderer.domElement);
 
-    // Mostrar mensaje al darle click
-    function showMessage() {
-      document.getElementById("message").style.display = "block";
+      vertices = [];
+      const path = document.querySelector("path");
+      const length = path.getTotalLength();
+
+      let tl = gsap.timeline({
+        onComplete: callback // cuando termina, mostramos mensaje
+      });
+
+      for (let i = 0; i < length; i += 0.5) {
+        const point = path.getPointAtLength(i);
+        const vector = new THREE.Vector3(point.x, -point.y, 0);
+        vector.x += (Math.random() - 0.5) * 20;
+        vector.y += (Math.random() - 0.5) * 20;
+        vector.z += (Math.random() - 0.5) * 50;
+        vertices.push(vector);
+
+        tl.from(vector, {
+          x: 300,
+          y: -276,
+          z: 0,
+          ease: "power2.inOut",
+          duration: "random(2, 5)"
+        }, i * 0.002);
+      }
+
+      geometry = new THREE.BufferGeometry().setFromPoints(vertices);
+      const material = new THREE.PointsMaterial({ color: 0xee5282, blending: THREE.AdditiveBlending, size: 3 });
+      particles = new THREE.Points(geometry, material);
+      particles.position.x -= 300;
+      particles.position.y += 276;
+      scene.add(particles);
+
+      function render() {
+        requestAnimationFrame(render);
+        geometry.setFromPoints(vertices);
+        renderer.render(scene, camera);
+      }
+      render();
     }
   </script>
 </body>
